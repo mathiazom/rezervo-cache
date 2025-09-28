@@ -1,0 +1,40 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: rezervo-cache-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: rezervo-cache-redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redisinsight_data:/db
+    depends_on:
+      - redis
+    environment:
+      - RIPORT=8001
+      - RIHOMEDIR=/db
+
+  rezervo-cache:
+    build: .
+    container_name: rezervo-cache
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./output:/app/output
+#    entrypoint: [ "sh", "-c", "sleep infinity" ]
+    command: >
+      --subdomain 3t
+      --business-unit 3
+
+volumes:
+  redis_data:
+  redisinsight_data:
